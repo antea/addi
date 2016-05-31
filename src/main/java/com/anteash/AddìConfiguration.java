@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.ldap.core.DirContextOperations;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -24,7 +26,7 @@ public class AddìConfiguration extends WebSecurityConfigurerAdapter {
 
     @Value("${ldap.domain:dominio.prova}")
     private String ldapDomain;
-    @Value("${ldap.url:ldap://192.168.10.13/}")
+    @Value("${ldap.url:ldap://192.168.10.13}")
     public String ldapUrl;
 
     @Bean
@@ -64,5 +66,24 @@ public class AddìConfiguration extends WebSecurityConfigurerAdapter {
         SimpleAuthorityMapper result = new SimpleAuthorityMapper();
         result.setConvertToUpperCase(true);
         return result;
+    }
+
+    // Per il fetch degli utenti
+    @Bean
+    public LdapTemplate ldapTemplate() {
+        return new LdapTemplate(ldapContextSource());
+    }
+
+    @Bean
+    public LdapContextSource ldapContextSource() {
+        LdapContextSource ldapContextSource = new LdapContextSource();
+        ldapContextSource.setUrl(ldapUrl);
+        ldapContextSource.setBase("CN=Users,DC=dominio,DC=prova");
+        ldapContextSource.setUserDn("CN=prova,CN=Users,DC=dominio,DC=prova");
+        ldapContextSource.setPassword("Pr0vaPr0va1");
+//        ldapContextSource.setReferral("follow");
+        // lcs.setPooled(false);
+        // lcs.setDirObjectFactory(DefaultDirObjectFactory.class);
+        return ldapContextSource;
     }
 }
