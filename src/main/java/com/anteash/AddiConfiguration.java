@@ -1,5 +1,6 @@
 package com.anteash;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,12 +23,23 @@ import java.util.Collection;
 
 @Slf4j
 @Configuration
-public class AddìConfiguration extends WebSecurityConfigurerAdapter {
+public class AddiConfiguration extends WebSecurityConfigurerAdapter {
 
-    @Value("${ldap.domain:dominio.prova}")
-    private String ldapDomain;
+    @Getter
     @Value("${ldap.url:ldap://192.168.10.13}")
     public String ldapUrl;
+    @Getter
+    @Value("${ldap.domain:dominio.prova}")
+    private String ldapDomain;
+    @Getter
+    @Value("${ldap.domaindc:dc=dominio,dc=prova}")
+    private String ldapDomainDC;
+    @Getter
+    @Value("${ldap.admin:prova}")
+    private String ldapAdmin;
+    @Getter
+    @Value("${ldap.adminPassword:Pr0vaPr0va1}")
+    private String ldapAdminPassword;
 
     @Bean
     public AuthenticationManager authenticationManager() {
@@ -76,14 +88,12 @@ public class AddìConfiguration extends WebSecurityConfigurerAdapter {
 
     @Bean
     public LdapContextSource ldapContextSource() {
-        LdapContextSource ldapContextSource = new LdapContextSource();
-        ldapContextSource.setUrl(ldapUrl);
-        ldapContextSource.setBase("CN=Users,DC=dominio,DC=prova");
-        ldapContextSource.setUserDn("CN=prova,CN=Users,DC=dominio,DC=prova");
-        ldapContextSource.setPassword("Pr0vaPr0va1");
-//        ldapContextSource.setReferral("follow");
-        // lcs.setPooled(false);
-        // lcs.setDirObjectFactory(DefaultDirObjectFactory.class);
-        return ldapContextSource;
+        LdapContextSource result = new LdapContextSource();
+        String base = "CN=Users," + ldapDomainDC;
+        result.setUrl(ldapUrl);
+        result.setBase(base);
+        result.setUserDn("CN=" + ldapAdmin + "," + base);
+        result.setPassword(ldapAdminPassword);
+        return result;
     }
 }

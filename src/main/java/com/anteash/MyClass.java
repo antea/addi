@@ -27,23 +27,28 @@ public class MyClass {
     private AuthenticationManager authenticationManager;
     @Autowired
     private LdapTemplate ldapTemplate;
+    @Autowired
+    private AddiConfiguration addìConfiguration;
 
     @PostConstruct
     public void doIt() {
         Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken("prova", "Pr0vaPr0va1"));
+                new UsernamePasswordAuthenticationToken(addìConfiguration.getLdapAdmin(),
+                        addìConfiguration.getLdapAdminPassword()));
         if (auth.getPrincipal() instanceof LdapUserDetails) {
             log.info("Autenticato LDAP con ruoli: {}", auth.getAuthorities());
         }
 
-        List<String> search = getAllPersonNames();
-        log.info("search: {}", search);
+        log.info("search in Administrators: {}", getAllPersonNames("Administrators", "Builtin"));
+        log.info("search in Users:          {}", getAllPersonNames("Users", "Builtin"));
+        log.info("search in Domain Users:   {}", getAllPersonNames("Domain Users", "Users"));
+        log.info("search in DsnAdmins:      {}", getAllPersonNames("DnsAdmins", "Users"));
     }
 
-    public List<String> getAllPersonNames() {
+    public List<String> getAllPersonNames(String group, String type) {
         LdapQueryBuilder query = query();
         ContainerCriteria criteria = query.where("objectclass").is("person");
-        criteria.and("memberof").is("CN=Administrators,CN=Builtin,DC=dominio,DC=prova");
+        criteria.and("memberof").is("CN=" + group + ",CN=" + type + "," + addìConfiguration.getLdapDomainDC());
         return ldapTemplate.search(criteria,
                 new AttributesMapper<String>() {
                     public String mapFromAttributes(Attributes attrs) throws NamingException {
